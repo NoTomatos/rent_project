@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: gorrent_db
+    environment:
+      POSTGRES_USER: gorrent_user
+      POSTGRES_PASSWORD: gorrent_password
+      POSTGRES_DB: gorrent_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - gorrent_network
+
+  app:
+    build: .
+    container_name: gorrent_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: gorrent_user
+      DB_PASSWORD: gorrent_password
+      DB_NAME: gorrent_db
+      JWT_SECRET: "your-secret-key-change-in-production"
+    volumes:
+      - .:/app
+    networks:
+      - gorrent_network
+
+volumes:
+  postgres_data:
+
+networks:
+  gorrent_network:
+    driver: bridge
