@@ -1,0 +1,1034 @@
+basePath: /
+definitions:
+  models.ApproveRequest:
+    properties:
+      status:
+        allOf:
+        - $ref: '#/definitions/models.RentalStatus'
+        enum:
+        - active
+        - canceled
+    required:
+    - status
+    type: object
+  models.Car:
+    properties:
+      brand:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_available:
+        type: boolean
+      model:
+        type: string
+      price_per_day:
+        type: number
+      updated_at:
+        type: string
+      year:
+        type: integer
+    type: object
+  models.CarRequest:
+    properties:
+      brand:
+        maxLength: 100
+        minLength: 1
+        type: string
+      model:
+        maxLength: 100
+        minLength: 1
+        type: string
+      price_per_day:
+        type: number
+      year:
+        maximum: 2030
+        minimum: 1900
+        type: integer
+    required:
+    - brand
+    - model
+    - price_per_day
+    - year
+    type: object
+  models.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+    type: object
+  models.ProfitAnalytics:
+    properties:
+      completed_rentals:
+        type: integer
+      end_date:
+        type: string
+      start_date:
+        type: string
+      total_profit:
+        type: number
+    type: object
+  models.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        maxLength: 100
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  models.RentalRequest:
+    properties:
+      car_id:
+        type: string
+      end_date:
+        type: string
+      start_date:
+        type: string
+    required:
+    - car_id
+    - end_date
+    - start_date
+    type: object
+  models.RentalResponse:
+    properties:
+      car:
+        $ref: '#/definitions/models.Car'
+      created_at:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: string
+      start_date:
+        type: string
+      status:
+        $ref: '#/definitions/models.RentalStatus'
+      total_price:
+        type: number
+      user:
+        $ref: '#/definitions/models.UserResponse'
+    type: object
+  models.RentalStatus:
+    enum:
+    - pending
+    - active
+    - completed
+    - canceled
+    type: string
+    x-enum-varnames:
+    - RentalStatusPending
+    - RentalStatusActive
+    - RentalStatusCompleted
+    - RentalStatusCanceled
+  models.UpdateRoleRequest:
+    properties:
+      role:
+        allOf:
+        - $ref: '#/definitions/models.UserRole'
+        enum:
+        - admin
+        - manager
+        - client
+    required:
+    - role
+    type: object
+  models.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      role:
+        $ref: '#/definitions/models.UserRole'
+    type: object
+  models.UserRole:
+    enum:
+    - admin
+    - manager
+    - client
+    type: string
+    x-enum-varnames:
+    - RoleAdmin
+    - RoleManager
+    - RoleClient
+host: localhost:8080
+info:
+  contact:
+    email: support@gorrent.com
+    name: API Support
+  description: API для сервиса аренды автомобилей с ролевой моделью, JWT-аутентификацией
+    и финансовой аналитикой.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: GoRent API
+  version: "1.0"
+paths:
+  /admin/analytics/car-utilization:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает статистику по использованию каждого автомобиля
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Использование автомобилей
+      tags:
+      - analytics
+  /admin/analytics/daily-profit:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает ежедневную разбивку прибыли за период
+      parameters:
+      - description: Дата начала (YYYY-MM-DD)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: Дата окончания (YYYY-MM-DD)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Ежедневная прибыль
+      tags:
+      - analytics
+  /admin/analytics/popular-brands:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список самых популярных брендов по количеству аренд
+      parameters:
+      - default: 5
+        description: Количество брендов
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Популярные бренды
+      tags:
+      - analytics
+  /admin/analytics/profit:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает общую прибыль и количество аренд за указанный период
+      parameters:
+      - description: Дата начала (YYYY-MM-DD)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: Дата окончания (YYYY-MM-DD)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ProfitAnalytics'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Финансовая аналитика
+      tags:
+      - analytics
+  /admin/analytics/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает статистику по пользователям и арендам
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Общая статистика
+      tags:
+      - analytics
+  /admin/rentals:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех аренд (доступно manager и admin)
+      parameters:
+      - description: Фильтр по статусу (pending, active, completed, canceled)
+        in: query
+        name: status
+        type: string
+      - default: 20
+        description: Лимит записей
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Все аренды
+      tags:
+      - admin
+  /admin/users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      description: Изменяет роль пользователя (доступно только admin)
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Новая роль
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Обновить роль пользователя
+      tags:
+      - admin
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Вход в систему, возвращает JWT токен
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Авторизация пользователя
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Создает нового пользователя с ролью client
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Регистрация нового пользователя
+      tags:
+      - auth
+  /cars:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список доступных автомобилей с возможностью фильтрации
+      parameters:
+      - description: Только доступные
+        in: query
+        name: available
+        type: boolean
+      - description: Фильтр по бренду
+        in: query
+        name: brand
+        type: string
+      - description: Фильтр по модели
+        in: query
+        name: model
+        type: string
+      - description: Минимальная цена
+        in: query
+        name: min_price
+        type: number
+      - description: Максимальная цена
+        in: query
+        name: max_price
+        type: number
+      - default: 20
+        description: Лимит записей
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список автомобилей
+      tags:
+      - cars
+    post:
+      consumes:
+      - application/json
+      description: Добавляет новый автомобиль в автопарк (доступно manager и admin)
+      parameters:
+      - description: Данные автомобиля
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CarRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Car'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Создать автомобиль
+      tags:
+      - cars
+  /cars/{id}:
+    delete:
+      description: Удаляет автомобиль из автопарка (доступно manager и admin)
+      parameters:
+      - description: ID автомобиля
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Удалить автомобиль
+      tags:
+      - cars
+    get:
+      consumes:
+      - application/json
+      description: Возвращает информацию об автомобиле
+      parameters:
+      - description: ID автомобиля
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Car'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить автомобиль по ID
+      tags:
+      - cars
+    put:
+      consumes:
+      - application/json
+      description: Обновляет данные существующего автомобиля (доступно manager и admin)
+      parameters:
+      - description: ID автомобиля
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Данные автомобиля
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CarRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Car'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Обновить автомобиль
+      tags:
+      - cars
+  /cars/{id}/availability:
+    put:
+      consumes:
+      - application/json
+      description: Изменяет статус доступности автомобиля (доступно manager и admin)
+      parameters:
+      - description: ID автомобиля
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Статус доступности
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Обновить статус доступности
+      tags:
+      - cars
+  /rentals:
+    post:
+      consumes:
+      - application/json
+      description: Бронирует автомобиль на указанные даты
+      parameters:
+      - description: Данные аренды
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RentalRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.RentalResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Создать аренду
+      tags:
+      - rentals
+  /rentals/{id}/approve:
+    put:
+      consumes:
+      - application/json
+      description: Подтверждает или отклоняет бронирование менеджером
+      parameters:
+      - description: ID аренды
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Статус аренды (active/canceled)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ApproveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RentalResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Подтвердить аренду
+      tags:
+      - rentals
+  /rentals/{id}/cancel:
+    put:
+      consumes:
+      - application/json
+      description: Отменяет существующее бронирование
+      parameters:
+      - description: ID аренды
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RentalResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Отменить аренду
+      tags:
+      - rentals
+  /rentals/my:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех аренд текущего пользователя
+      parameters:
+      - default: 20
+        description: Лимит записей
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Мои аренды
+      tags:
+      - rentals
+  /users/me:
+    get:
+      description: Возвращает данные пользователя по JWT токену
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Получить информацию о текущем пользователе
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: 'Введите JWT токен в формате: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

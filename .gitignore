@@ -30,3 +30,39 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Binary files
+gorrent
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Output of go coverage
+*.out
+
+# Dependency directories
+vendor/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

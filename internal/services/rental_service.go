@@ -119,7 +119,7 @@ func (s *RentalService) isCarAvailableForDates(tx *sql.Tx, carID uuid.UUID, star
         FROM rentals
         WHERE car_id = $1
             AND status IN ('pending', 'active')
-            AND daterange(start_date, end_date, '[]') && daterange($2, $3, '[]')
+            AND start_date < $3 AND end_date > $2
 		FOR UPDATE
     `
 

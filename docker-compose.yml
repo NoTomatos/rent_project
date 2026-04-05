@@ -14,6 +14,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - gorrent_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gorrent_user -d gorrent_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
     build: .
@@ -21,14 +26,20 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: gorrent_user
       DB_PASSWORD: gorrent_password
       DB_NAME: gorrent_db
-      JWT_SECRET: "your-secret-key-change-in-production"
+      DB_SSL_MODE: disable
+      SERVER_PORT: 8080
+      SERVER_MODE: release
+      JWT_SECRET: "production-secret-key-change-this"
+      JWT_EXPIRATION_HOURS: 24
+      ENV: production
     volumes:
       - .:/app
     networks:
