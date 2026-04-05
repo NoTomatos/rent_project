@@ -22,7 +22,6 @@ func NewCarService(db *sql.DB) *CarService {
 }
 
 func (s *CarService) GetAllCars(req *models.CarListRequest) ([]*models.Car, int, error) {
-	// Базовый запрос
 	query := `
         SELECT id, model, brand, year, price_per_day, is_available, created_at, updated_at
         FROM cars
@@ -43,10 +42,10 @@ func (s *CarService) GetAllCars(req *models.CarListRequest) ([]*models.Car, int,
 	}
 
 	if req.Brand != "" {
-		query += fmt.Sprintf(" AND LOWER(brand) LIKE $%d", argIndex)
-		countQuery += fmt.Sprintf(" AND LOWER(brand) LIKE $%d", argIndex)
-		args = append(args, "%"+strings.ToLower(req.Brand)+"%")
-		countArgs = append(countArgs, "%"+strings.ToLower(req.Brand)+"%")
+		query += fmt.Sprintf(" AND LOWER(brand) = $%d", argIndex)
+		countQuery += fmt.Sprintf(" AND LOWER(brand) = $%d", argIndex)
+		args = append(args, strings.ToLower(req.Brand))
+		countArgs = append(countArgs, strings.ToLower(req.Brand))
 		argIndex++
 	}
 
@@ -155,7 +154,6 @@ func (s *CarService) GetCarByID(id uuid.UUID) (*models.Car, error) {
 }
 
 func (s *CarService) CreateCar(req *models.CarRequest) (*models.Car, error) {
-	// Валидация года выпуска
 	if req.Year < 1900 || req.Year > 2030 {
 		return nil, errors.New("invalid year: must be between 1900 and 2030")
 	}

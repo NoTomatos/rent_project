@@ -120,6 +120,7 @@ func (s *RentalService) isCarAvailableForDates(tx *sql.Tx, carID uuid.UUID, star
         WHERE car_id = $1
             AND status IN ('pending', 'active')
             AND daterange(start_date, end_date, '[]') && daterange($2, $3, '[]')
+		FOR UPDATE
     `
 
 	var count int

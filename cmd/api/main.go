@@ -1,3 +1,24 @@
+// main.go
+
+// @title           GoRent API
+// @version         1.0
+// @description     API для сервиса аренды автомобилей с ролевой моделью, JWT-аутентификацией и финансовой аналитикой.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.email  support@gorrent.com
+
+// @license.name   MIT
+// @license.url    https://opensource.org/licenses/MIT
+
+// @host      localhost:8080
+// @BasePath  /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Введите JWT токен в формате: Bearer {token}
+
 package main
 
 import (
